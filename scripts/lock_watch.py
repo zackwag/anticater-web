@@ -11,7 +11,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from Foundation import NSDistributedNotificationCenter, NSObject, NSWorkspace
+from AppKit import NSWorkspace
+from Foundation import NSDistributedNotificationCenter, NSObject
 from PyObjCTools import AppHelper
 
 SCRIPT_DIR = Path(__file__).resolve().parent
