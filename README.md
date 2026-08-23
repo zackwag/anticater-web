@@ -45,6 +45,11 @@ app controls).
 Not supported (out of scope for now): the Procreate action-preset tab, the delay/macro
 recording tab, and RGB palette editing.
 
+## Automation
+
+There's a macOS script to automatically change the LED mode when your screen
+locks/unlocks, independent of the browser — see [`scripts/`](./scripts).
+
 ## Troubleshooting
 
 **LED mode gets stuck / stops responding to changes.** The device itself can hang in
