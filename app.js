@@ -2,6 +2,17 @@ const VENDOR_ID = 0x514c;
 const PRODUCT_ID = 0x8850;
 const USAGE_PAGE = 0xff00;
 
+const IS_MAC = /mac/i.test(navigator.userAgentData?.platform || navigator.platform || navigator.userAgent);
+
+// Display labels for MODIFIER_CODES' platform-neutral ids. "alt"/"meta" are
+// the same physical keys and byte codes on every platform -- only the label
+// people expect to see differs (Option/Cmd on Mac, Alt/Win elsewhere).
+const MODIFIER_LABELS = IS_MAC
+  ? { ctrl: "Ctrl", shift: "Shift", alt: "Option", meta: "Cmd",
+      rctrl: "Right Ctrl", rshift: "Right Shift", ralt: "Right Option", rmeta: "Right Cmd" }
+  : { ctrl: "Ctrl", shift: "Shift", alt: "Alt", meta: "Win",
+      rctrl: "Right Ctrl", rshift: "Right Shift", ralt: "Right Alt", rmeta: "Right Win" };
+
 const CONTROL_LABELS = {
   scrollLeft: "Scroll Left",
   press: "Press",
@@ -49,9 +60,9 @@ function labelFor(type, code) {
   if (type === BINDING_TYPE.key && code > 0xff) {
     const modifierByte = code & 0xff;
     const keyByte = (code >> 8) & 0xff;
-    const modifierName = Object.keys(MODIFIER_CODES).find((k) => MODIFIER_CODES[k] === modifierByte);
+    const modifierId = Object.keys(MODIFIER_CODES).find((k) => MODIFIER_CODES[k] === modifierByte);
     const keyName = Object.keys(KEYCODES).find((k) => KEYCODES[k] === keyByte);
-    if (modifierName && keyName) return `${modifierName}+${humanize(keyName)}`;
+    if (modifierId && keyName) return `${MODIFIER_LABELS[modifierId]}+${humanize(keyName)}`;
   }
   const table = type === BINDING_TYPE.media ? MEDIACODES : KEYCODES;
   const name = Object.keys(table).find((k) => table[k] === code);
@@ -350,10 +361,10 @@ function switchTab(tab) {
   if (tab === "combo") showComboModifierStep();
 }
 
-let selectedModifierName = null;
+let selectedModifierId = null;
 
 function showComboModifierStep() {
-  selectedModifierName = null;
+  selectedModifierId = null;
   $("#comboModifierList").style.display = "flex";
   $("#comboKeyStep").style.display = "none";
 }
@@ -361,13 +372,14 @@ function showComboModifierStep() {
 function renderComboModifierList() {
   const list = $("#comboModifierList");
   list.innerHTML = "";
-  Object.keys(MODIFIER_CODES).forEach((name) => {
+  Object.keys(MODIFIER_CODES).forEach((id) => {
+    const label = MODIFIER_LABELS[id];
     const btn = document.createElement("button");
     btn.className = "media-btn";
-    btn.textContent = name;
+    btn.textContent = label;
     btn.addEventListener("click", () => {
-      selectedModifierName = name;
-      $("#comboSelectedModifier").textContent = name;
+      selectedModifierId = id;
+      $("#comboSelectedModifier").textContent = label;
       $("#comboModifierList").style.display = "none";
       $("#comboKeyStep").style.display = "block";
     });
@@ -384,9 +396,10 @@ function renderComboKeyGrid() {
     btn.className = "key-btn";
     btn.textContent = label;
     btn.addEventListener("click", () => {
-      const modifierCode = MODIFIER_CODES[selectedModifierName];
+      const modifierCode = MODIFIER_CODES[selectedModifierId];
       const combined = combineModifierKey(modifierCode, keyCode);
-      applyBinding(activeControl, BINDING_TYPE.key, combined, `${selectedModifierName}+${label}`);
+      const modifierLabel = MODIFIER_LABELS[selectedModifierId];
+      applyBinding(activeControl, BINDING_TYPE.key, combined, `${modifierLabel}+${label}`);
       closePicker();
     });
     grid.appendChild(btn);
