@@ -12,15 +12,24 @@ debugger — see [`protocol.js`](./protocol.js) for the documented wire format.
 ## Using it
 
 WebHID requires a secure context, so you can't just open `index.html` as a `file://`
-URL. Serve the folder locally and open it from `localhost`:
+URL — it needs to be served and opened from `localhost`.
+
+**With Docker:**
+
+```sh
+docker compose up
+```
+
+**Without Docker:**
 
 ```sh
 python3 -m http.server 8743
 ```
 
-Then open `http://localhost:8743/` in Chrome, Edge, or Opera, click **Connect device**,
-and pick the device from the browser's picker (it'll show up as "USB Composite Device"
-— that's the device's own USB descriptor, not something this app controls).
+Either way, open `http://localhost:8743/` in Chrome, Edge, or Opera, click
+**Connect device**, and pick the device from the browser's picker (it'll show up as
+"USB Composite Device" — that's the device's own USB descriptor, not something this
+app controls).
 
 ## What it supports
 
@@ -35,6 +44,12 @@ and pick the device from the browser's picker (it'll show up as "USB Composite D
 
 Not supported (out of scope for now): the Procreate action-preset tab, the delay/macro
 recording tab, and RGB palette editing.
+
+## Troubleshooting
+
+**LED mode gets stuck / stops responding to changes.** The device itself can hang in
+this state (not this app or your browser) — unplug it and plug it back in. Bindings and
+LED mode persist through the power cycle since they live in the device's own memory.
 
 ## Contributing a new combo code
 

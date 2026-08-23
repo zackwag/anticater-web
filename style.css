@@ -41,6 +41,13 @@ html, body {
   margin: 0;
 }
 
+.version-tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  vertical-align: middle;
+}
+
 .topbar .sub {
   color: var(--text-dim);
   font-size: 13px;

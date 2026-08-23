@@ -319,7 +319,8 @@ function buildLedGrid() {
 // ---------- wiring ----------
 
 function exportConfig() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const payload = { appVersion: APP_VERSION, ...state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -408,6 +409,7 @@ function checkWebHidSupport() {
   return supported;
 }
 
+$("#versionTag").textContent = `v${APP_VERSION}`;
 buildLedGrid();
 switchTab("key");
 renderMediaList();
