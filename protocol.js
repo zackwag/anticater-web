@@ -96,15 +96,20 @@ const LED_CUSTOM_COLOR_MODE = 3;
 // goes in the high-byte position (byte 11) -- combineModifierKey below
 // packs that into one 16-bit "code" value. Modifier values are exactly
 // the standard USB HID modifier usage (0xE0-0xE7) + 0x11.
+// Labeled for macOS (this tool's only supported platform): what the native
+// app calls "Win+"/"Alt+" is the same physical key as Cmd/Option on Mac --
+// USB HID doesn't distinguish the naming, only the modifier bit. Confirmed
+// by testing: the native app's own "command"/"option"/"control" buttons
+// produce byte-for-byte identical codes to "Win+"/"Alt+"/"Ctrl+".
 const MODIFIER_CODES = {
   "Ctrl": 0xf1,
   "Shift": 0xf2,
-  "Alt": 0xf3,
-  "Win": 0xf4,
+  "Option": 0xf3,
+  "Cmd": 0xf4,
   "Right Ctrl": 0xf5,
   "Right Shift": 0xf6,
-  "Right Alt": 0xf7,
-  "Right Win": 0xf8,
+  "Right Option": 0xf7,
+  "Right Cmd": 0xf8,
 };
 
 function combineModifierKey(modifierCode, keyCode) {
