@@ -68,6 +68,10 @@ auto-reconnects.** The cached WebHID connection from a previous page load can go
 Click **Disconnect**, then **Connect device** again to get a fresh connection — no
 need to unplug the device for this one.
 
+**Connecting fails, or every write silently does nothing.** Only one program can
+hold the device's USB HID connection at a time — close `ANTICATER.app` (and any other
+tool talking to the device) before connecting here.
+
 ## Contributing a new combo code
 
 The `Ctrl+Shift+Alt` combo tab in `ANTICATER.app` doesn't compose modifiers the way
@@ -82,6 +86,25 @@ please [open an issue](../../issues/new) with:
 2. The resulting byte, captured by intercepting the native app's HID writes (see
    `protocol.js` header comments for the report format — the combo code is the last
    non-zero byte before the padding in the `0xFD` "set binding" packet)
+
+## Related projects
+
+This tool is a straightforward configurator — bind the 5 gestures, pick an LED mode.
+For deeper, per-application remapping and other transports, other people have built:
+
+- [x0rloser/anticater_vk01](https://github.com/x0rloser/anticater_vk01) — the Python
+  reverse-engineering this project's read protocol is based on
+- [frostvalley-hussey/vk01-anticater](https://github.com/frostvalley-hussey/vk01-anticater) —
+  a macOS daemon that binds the 5 gestures to fixed chords once, then remaps them
+  per-app with layers, since the device's own firmware can't be replaced
+- [dreamug/anticater-knob-control](https://github.com/dreamug/anticater-knob-control) —
+  a native macOS app with a similar per-application remapping approach, plus a GUI
+- [zerni/ha-ble-knob](https://github.com/zerni/ha-ble-knob) — a Home Assistant
+  integration for the device's Bluetooth HID mode (a different transport than the USB
+  connection this tool uses)
+- [afcragg78/Wireless-Smart-Home-Volume-Knob-Anticater-VK-01-to-Music-Assistant-](https://github.com/afcragg78/Wireless-Smart-Home-Volume-Knob-Anticater-VK-01-to-Music-Assistant-) —
+  routes the knob's Bluetooth media keys on Windows into Home Assistant / Music
+  Assistant via MQTT
 
 ## Credits
 

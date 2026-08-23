@@ -50,9 +50,7 @@ function labelFor(type, code) {
     const combo = Object.keys(COMBO_CODES).find((k) => COMBO_CODES[k] === code);
     if (combo) return combo;
   }
-  const table = type === BINDING_TYPE.media ? MEDIACODES
-    : type === BINDING_TYPE.mouse ? MOUSE_CODES
-    : KEYCODES;
+  const table = type === BINDING_TYPE.media ? MEDIACODES : KEYCODES;
   const name = Object.keys(table).find((k) => table[k] === code);
   return name ? humanize(name) : `code 0x${code.toString(16)}`;
 }
@@ -234,7 +232,7 @@ async function syncStateFromDevice(dev) {
       console.log("layer entry:", entry, "raw:", hex(new Uint8Array(data.buffer)));
       const controlName = controlNameById[entry.controlId];
       if (!controlName) continue; // not one of our 5 known controls
-      if (![BINDING_TYPE.key, BINDING_TYPE.media, BINDING_TYPE.mouse].includes(entry.type)) continue;
+      if (![BINDING_TYPE.key, BINDING_TYPE.media].includes(entry.type)) continue;
       state.bindings[controlName] = { type: entry.type, code: entry.code };
     }
   } catch (e) {
@@ -338,28 +336,11 @@ function renderMediaList() {
   });
 }
 
-function renderMouseList() {
-  const list = $("#mouseList");
-  list.innerHTML = "";
-  Object.entries(MOUSE_CODES).forEach(([name, code]) => {
-    const label = humanize(name);
-    const btn = document.createElement("button");
-    btn.className = "media-btn";
-    btn.textContent = label;
-    btn.addEventListener("click", () => {
-      applyBinding(activeControl, BINDING_TYPE.mouse, code, label);
-      closePicker();
-    });
-    list.appendChild(btn);
-  });
-}
-
 function switchTab(tab) {
   activeTab = tab;
   $$(".modal-tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
   $("#keyGrid").style.display = tab === "key" ? "grid" : "none";
   $("#mediaList").style.display = tab === "media" ? "flex" : "none";
-  $("#mouseList").style.display = tab === "mouse" ? "flex" : "none";
   $("#comboPanel").style.display = tab === "combo" ? "block" : "none";
   $("#keySearch").parentElement.style.display = tab === "key" ? "block" : "none";
   if (tab === "combo") {
@@ -639,7 +620,6 @@ $("#versionTag").textContent = `v${APP_VERSION}`;
 buildLedGrid();
 switchTab("key");
 renderMediaList();
-renderMouseList();
 renderComboKnownList();
 renderBindings();
 renderLed();

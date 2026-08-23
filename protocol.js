@@ -16,7 +16,11 @@ const CONTROL = {
 const BINDING_TYPE = {
   key: 0x01,
   media: 0x02,
-  mouse: 0x03, // not implemented in the UI; documented for completeness
+  // Tried binding controls 2-6 to this: the write succeeds but the device
+  // never actually performs a mouse action. Likely only accepted by a
+  // different control ID belonging to the separate swipe pad, not the
+  // dial gestures. Not implemented in the UI as a result.
+  mouse: 0x03,
 };
 
 // Bindings live in one of 3 on-device layers/profiles. We only use layer 1.
@@ -39,6 +43,10 @@ const KEYCODES = {
   PrintScreen: 0x46, ScrollLock: 0x47, Pause: 0x48, Insert: 0x49,
   Home: 0x4a, PageUp: 0x4b, Delete: 0x4c, End: 0x4d, PageDown: 0x4e,
   ArrowRight: 0x4f, ArrowLeft: 0x50, ArrowDown: 0x51, ArrowUp: 0x52,
+  // Rarely on physical keyboards, but useful for binding dials to keys that
+  // won't collide with anything else -- e.g. running multiple knobs.
+  F13: 0x68, F14: 0x69, F15: 0x6a, F16: 0x6b, F17: 0x6c, F18: 0x6d,
+  F19: 0x6e, F20: 0x6f, F21: 0x70, F22: 0x71, F23: 0x72, F24: 0x73,
 };
 
 // USB HID Consumer Page usage codes. Most fit in one byte (0x00-0xFF); a few
