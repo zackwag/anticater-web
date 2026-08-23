@@ -43,10 +43,9 @@ app controls).
   reflects what's actually set rather than a locally-cached guess
 - Binding a keyboard key or media key to each of the dial's 5 gestures (Scroll Left,
   Press, Scroll Right, Press+Scroll Left, Press+Scroll Right)
-- Binding a single modifier hold (Ctrl/Shift/Alt/Win, either side) to a gesture —
-  this is the full extent of what the device's "combo" feature actually does; despite
-  the UI implying otherwise, it can't send real modifier+key combos like Ctrl+C (see
-  `protocol.js` for how this was verified)
+- Binding a modifier+key combo (e.g. Ctrl+C, Cmd+V) to a gesture — the modifier
+  (Ctrl/Shift/Alt/Win, either side) and the key are encoded as a 2-byte code, the
+  same mechanism already used for extended media codes (see `protocol.js`)
 - Selecting one of the 6 built-in LED modes, including custom per-LED colors and
   presets for Mode 3
 - Exporting/importing your configuration as JSON, as a portable backup

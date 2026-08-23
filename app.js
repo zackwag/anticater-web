@@ -46,9 +46,12 @@ function humanize(name) {
 // so labels stay correct even if humanize() rules change after a binding
 // was saved to localStorage.
 function labelFor(type, code) {
-  if (type === BINDING_TYPE.key) {
-    const combo = Object.keys(COMBO_CODES).find((k) => COMBO_CODES[k] === code);
-    if (combo) return combo;
+  if (type === BINDING_TYPE.key && code > 0xff) {
+    const modifierByte = code & 0xff;
+    const keyByte = (code >> 8) & 0xff;
+    const modifierName = Object.keys(MODIFIER_CODES).find((k) => MODIFIER_CODES[k] === modifierByte);
+    const keyName = Object.keys(KEYCODES).find((k) => KEYCODES[k] === keyByte);
+    if (modifierName && keyName) return `${modifierName}+${humanize(keyName)}`;
   }
   const table = type === BINDING_TYPE.media ? MEDIACODES : KEYCODES;
   const name = Object.keys(table).find((k) => table[k] === code);
@@ -294,6 +297,7 @@ function openPicker(controlName) {
   $("#pickerOverlay").classList.add("open");
   $("#keySearch").value = "";
   renderKeyGrid("");
+  showComboModifierStep();
 }
 
 function closePicker() {
@@ -343,20 +347,49 @@ function switchTab(tab) {
   $("#mediaList").style.display = tab === "media" ? "flex" : "none";
   $("#comboPanel").style.display = tab === "combo" ? "block" : "none";
   $("#keySearch").parentElement.style.display = tab === "key" ? "block" : "none";
+  if (tab === "combo") showComboModifierStep();
 }
 
-function renderComboList() {
-  const list = $("#comboList");
+let selectedModifierName = null;
+
+function showComboModifierStep() {
+  selectedModifierName = null;
+  $("#comboModifierList").style.display = "flex";
+  $("#comboKeyStep").style.display = "none";
+}
+
+function renderComboModifierList() {
+  const list = $("#comboModifierList");
   list.innerHTML = "";
-  Object.entries(COMBO_CODES).forEach(([name, code]) => {
+  Object.keys(MODIFIER_CODES).forEach((name) => {
     const btn = document.createElement("button");
     btn.className = "media-btn";
     btn.textContent = name;
     btn.addEventListener("click", () => {
-      applyBinding(activeControl, BINDING_TYPE.key, code, name);
-      closePicker();
+      selectedModifierName = name;
+      $("#comboSelectedModifier").textContent = name;
+      $("#comboModifierList").style.display = "none";
+      $("#comboKeyStep").style.display = "block";
     });
     list.appendChild(btn);
+  });
+}
+
+function renderComboKeyGrid() {
+  const grid = $("#comboKeyGrid");
+  grid.innerHTML = "";
+  Object.entries(KEYCODES).forEach(([name, keyCode]) => {
+    const label = humanize(name);
+    const btn = document.createElement("button");
+    btn.className = "key-btn";
+    btn.textContent = label;
+    btn.addEventListener("click", () => {
+      const modifierCode = MODIFIER_CODES[selectedModifierName];
+      const combined = combineModifierKey(modifierCode, keyCode);
+      applyBinding(activeControl, BINDING_TYPE.key, combined, `${selectedModifierName}+${label}`);
+      closePicker();
+    });
+    grid.appendChild(btn);
   });
 }
 
@@ -571,6 +604,7 @@ $$(".modal-tab").forEach((t) => t.addEventListener("click", () => switchTab(t.da
 $("#ledSavePreset").addEventListener("click", openPresetNameDialog);
 $("#presetNameClose").addEventListener("click", closePresetNameDialog);
 $("#presetNameSave").addEventListener("click", saveCurrentAsPreset);
+$("#comboBackBtn").addEventListener("click", showComboModifierStep);
 $("#presetNameInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") saveCurrentAsPreset();
 });
@@ -605,7 +639,8 @@ $("#versionTag").textContent = `v${APP_VERSION}`;
 buildLedGrid();
 switchTab("key");
 renderMediaList();
-renderComboList();
+renderComboModifierList();
+renderComboKeyGrid();
 renderBindings();
 renderLed();
 setConnected(false);

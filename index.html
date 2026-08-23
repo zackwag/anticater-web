@@ -108,7 +108,7 @@
     <div class="modal-tabs">
       <button class="modal-tab active" data-tab="key">Keyboard key</button>
       <button class="modal-tab" data-tab="media">Media key</button>
-      <button class="modal-tab" data-tab="combo">Modifier</button>
+      <button class="modal-tab" data-tab="combo">Combo</button>
     </div>
     <div class="modal-search">
       <input id="keySearch" type="text" placeholder="Search keys&hellip;" />
@@ -118,11 +118,16 @@
       <div class="media-list" id="mediaList" style="display:none"></div>
       <div id="comboPanel" style="display:none">
         <p class="hint" style="margin-top:0">
-          Holds a single modifier key while the gesture is active &mdash; this device's
-          "combo" feature doesn't actually support modifier+key combos like Ctrl+C, only
-          holding one modifier on its own.
+          Pick a modifier, then the key to combine it with (e.g. Ctrl + C).
         </p>
-        <div class="media-list" id="comboList"></div>
+        <div class="media-list" id="comboModifierList"></div>
+        <div id="comboKeyStep" style="display:none">
+          <p class="hint">
+            <strong id="comboSelectedModifier"></strong> + which key?
+            <button id="comboBackBtn" style="margin-left:8px">&larr; change modifier</button>
+          </p>
+          <div class="key-grid" id="comboKeyGrid"></div>
+        </div>
       </div>
     </div>
   </div>
