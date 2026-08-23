@@ -193,6 +193,79 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   text-shadow: none;
 }
 
+.subhead {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 24px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.led-color-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.led-color-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.led-color-item .swatch-label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.led-color-item input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.led-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.led-preset {
+  position: relative;
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  width: 84px;
+  height: 32px;
+}
+.led-preset:hover { border-color: var(--accent-dim); }
+.led-preset .swatch {
+  flex: 1;
+}
+.led-preset .remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #a34b4b;
+  color: white;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
 /* Key picker modal */
 .overlay {
   position: fixed; inset: 0;

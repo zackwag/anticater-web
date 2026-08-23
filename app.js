@@ -50,7 +50,9 @@ function labelFor(type, code) {
     const combo = Object.keys(COMBO_CODES).find((k) => COMBO_CODES[k] === code);
     if (combo) return combo;
   }
-  const table = type === BINDING_TYPE.media ? MEDIACODES : KEYCODES;
+  const table = type === BINDING_TYPE.media ? MEDIACODES
+    : type === BINDING_TYPE.mouse ? MOUSE_CODES
+    : KEYCODES;
   const name = Object.keys(table).find((k) => table[k] === code);
   return name ? humanize(name) : `code 0x${code.toString(16)}`;
 }
@@ -60,13 +62,15 @@ const STORAGE_KEY = "anticater-web-state-v1";
 let device = null;
 
 const state = loadState();
+if (!state.ledColors) state.ledColors = LED_DEFAULT_COLORS.map((c) => [...c]);
+if (!state.ledPresets) state.ledPresets = {};
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {}
-  return { bindings: {}, ledMode: null };
+  return { bindings: {}, ledMode: null, ledColors: LED_DEFAULT_COLORS, ledPresets: {} };
 }
 
 function saveState() {
@@ -164,17 +168,19 @@ function hex(bytes) {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join(" ");
 }
 
-async function applyLedMode(mode) {
+async function applyLedMode(mode, colors) {
   if (!device) {
     console.warn("applyLedMode: no device connected");
     return;
   }
+  const useColors = colors || (mode === LED_CUSTOM_COLOR_MODE ? state.ledColors : undefined);
   try {
-    const packets = buildLedPackets(mode);
+    const packets = buildLedPackets(mode, useColors);
     console.log(`applyLedMode(${mode}) sending ${packets.length} packets:`);
     packets.forEach((p, idx) => console.log(`  [${idx}] ${hex(p)}`));
     await sendPackets(packets);
     state.ledMode = mode;
+    if (mode === LED_CUSTOM_COLOR_MODE && colors) state.ledColors = colors;
     saveState();
     renderLed();
     toast(mode === 0 ? "LED turned off" : `LED mode ${mode} applied`);
@@ -208,8 +214,9 @@ async function syncStateFromDevice(dev) {
 
   try {
     const [ledData] = await sendAndCollectReports(dev, buildLedModeQueryPacket(), 1, 2000);
-    const { mode } = parseLedModeResponse(ledData);
+    const { mode, colors } = parseLedModeResponse(ledData);
     if (mode >= 0 && mode < LED_MODE_COUNT) state.ledMode = mode;
+    if (colors && colors.length === 6) state.ledColors = colors;
   } catch (e) {
     ok = false;
     console.warn("couldn't read LED mode from device:", e);
@@ -227,7 +234,7 @@ async function syncStateFromDevice(dev) {
       console.log("layer entry:", entry, "raw:", hex(new Uint8Array(data.buffer)));
       const controlName = controlNameById[entry.controlId];
       if (!controlName) continue; // not one of our 5 known controls
-      if (entry.type !== BINDING_TYPE.key && entry.type !== BINDING_TYPE.media) continue;
+      if (![BINDING_TYPE.key, BINDING_TYPE.media, BINDING_TYPE.mouse].includes(entry.type)) continue;
       state.bindings[controlName] = { type: entry.type, code: entry.code };
     }
   } catch (e) {
@@ -331,11 +338,28 @@ function renderMediaList() {
   });
 }
 
+function renderMouseList() {
+  const list = $("#mouseList");
+  list.innerHTML = "";
+  Object.entries(MOUSE_CODES).forEach(([name, code]) => {
+    const label = humanize(name);
+    const btn = document.createElement("button");
+    btn.className = "media-btn";
+    btn.textContent = label;
+    btn.addEventListener("click", () => {
+      applyBinding(activeControl, BINDING_TYPE.mouse, code, label);
+      closePicker();
+    });
+    list.appendChild(btn);
+  });
+}
+
 function switchTab(tab) {
   activeTab = tab;
   $$(".modal-tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
   $("#keyGrid").style.display = tab === "key" ? "grid" : "none";
   $("#mediaList").style.display = tab === "media" ? "flex" : "none";
+  $("#mouseList").style.display = tab === "mouse" ? "flex" : "none";
   $("#comboPanel").style.display = tab === "combo" ? "block" : "none";
   $("#keySearch").parentElement.style.display = tab === "key" ? "block" : "none";
   if (tab === "combo") {
@@ -380,6 +404,108 @@ function renderLed() {
   $$(".led-swatch").forEach((el) => {
     el.classList.toggle("active", Number(el.dataset.mode) === state.ledMode);
   });
+  renderLedCustomSection();
+}
+
+function rgbToHex([r, g, b]) {
+  return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+}
+
+const BUILT_IN_PRESETS = {
+  Rainbow: LED_DEFAULT_COLORS,
+  "All White": Array.from({ length: 6 }, () => [0xff, 0xff, 0xff]),
+  "All Off": Array.from({ length: 6 }, () => [0x00, 0x00, 0x00]),
+};
+
+function allLedPresets() {
+  return { ...BUILT_IN_PRESETS, ...state.ledPresets };
+}
+
+function renderLedCustomSection() {
+  const isCustomMode = state.ledMode === LED_CUSTOM_COLOR_MODE;
+  $("#ledCustomSection").style.display = isCustomMode ? "block" : "none";
+  if (!isCustomMode) return;
+  renderLedColorRow();
+  renderLedPresetRow();
+}
+
+function renderLedColorRow() {
+  const row = $("#ledColorRow");
+  row.innerHTML = "";
+  state.ledColors.forEach((color, i) => {
+    const item = document.createElement("div");
+    item.className = "led-color-item";
+    const input = document.createElement("input");
+    input.type = "color";
+    input.value = rgbToHex(color);
+    input.addEventListener("input", () => {
+      const newColors = state.ledColors.map((c, idx) => (idx === i ? hexToRgb(input.value) : c));
+      applyLedMode(LED_CUSTOM_COLOR_MODE, newColors);
+    });
+    const label = document.createElement("span");
+    label.className = "swatch-label";
+    label.textContent = `LED ${i + 1}`;
+    item.appendChild(input);
+    item.appendChild(label);
+    row.appendChild(item);
+  });
+}
+
+function renderLedPresetRow() {
+  const row = $("#ledPresetRow");
+  row.innerHTML = "";
+  Object.entries(allLedPresets()).forEach(([name, colors]) => {
+    const el = document.createElement("div");
+    el.className = "led-preset";
+    el.title = name;
+    colors.forEach((c) => {
+      const sw = document.createElement("div");
+      sw.className = "swatch";
+      sw.style.background = rgbToHex(c);
+      el.appendChild(sw);
+    });
+    el.addEventListener("click", () => {
+      applyLedMode(LED_CUSTOM_COLOR_MODE, colors.map((c) => [...c]));
+    });
+    if (state.ledPresets[name]) {
+      const remove = document.createElement("button");
+      remove.className = "remove";
+      remove.textContent = "×";
+      remove.addEventListener("click", (e) => {
+        e.stopPropagation();
+        delete state.ledPresets[name];
+        saveState();
+        renderLedPresetRow();
+      });
+      el.appendChild(remove);
+    }
+    row.appendChild(el);
+  });
+}
+
+function openPresetNameDialog() {
+  $("#presetNameInput").value = "";
+  $("#presetNameOverlay").classList.add("open");
+  $("#presetNameInput").focus();
+}
+
+function closePresetNameDialog() {
+  $("#presetNameOverlay").classList.remove("open");
+}
+
+function saveCurrentAsPreset() {
+  const name = $("#presetNameInput").value.trim();
+  if (!name) return;
+  state.ledPresets[name] = state.ledColors.map((c) => [...c]);
+  saveState();
+  renderLedPresetRow();
+  toast(`Saved preset "${name}"`);
+  closePresetNameDialog();
 }
 
 function buildLedGrid() {
@@ -473,6 +599,15 @@ $("#pickerOverlay").addEventListener("click", (e) => {
 });
 $$(".modal-tab").forEach((t) => t.addEventListener("click", () => switchTab(t.dataset.tab)));
 $("#comboAssign").addEventListener("click", assignCombo);
+$("#ledSavePreset").addEventListener("click", openPresetNameDialog);
+$("#presetNameClose").addEventListener("click", closePresetNameDialog);
+$("#presetNameSave").addEventListener("click", saveCurrentAsPreset);
+$("#presetNameInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveCurrentAsPreset();
+});
+$("#presetNameOverlay").addEventListener("click", (e) => {
+  if (e.target.id === "presetNameOverlay") closePresetNameDialog();
+});
 $("#comboInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") assignCombo();
 });
@@ -504,6 +639,7 @@ $("#versionTag").textContent = `v${APP_VERSION}`;
 buildLedGrid();
 switchTab("key");
 renderMediaList();
+renderMouseList();
 renderComboKnownList();
 renderBindings();
 renderLed();

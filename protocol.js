@@ -41,7 +41,9 @@ const KEYCODES = {
   ArrowRight: 0x4f, ArrowLeft: 0x50, ArrowDown: 0x51, ArrowUp: 0x52,
 };
 
-// USB HID Consumer Page usage codes that fit in one byte (0x00-0xFF).
+// USB HID Consumer Page usage codes. Most fit in one byte (0x00-0xFF); a few
+// (like Calculator) need the full 2 bytes, encoded across positions 8 and 11
+// of the bind packet.
 const MEDIACODES = {
   PlayPause: 0xcd,
   Stop: 0xb7,
@@ -54,19 +56,28 @@ const MEDIACODES = {
   Mute: 0xe2,
   VolumeUp: 0xe9,
   VolumeDown: 0xea,
+  Calculator: 0x192, // 2-byte code, from x0rloser/anticater_vk01
 };
 
-// 16-color palette as observed in a native-app capture. Order/meaning of
-// each slot beyond "some fixed palette" is unconfirmed; treated as a fixed
-// constant here since palette editing wasn't reverse-engineered.
-const LED_PALETTE = [
-  [0xff, 0x00, 0x00], [0xff, 0x80, 0x30], [0xff, 0xff, 0x30], [0x00, 0xff, 0x00],
-  [0x00, 0xff, 0xff], [0x00, 0x00, 0xff], [0x80, 0x00, 0x80], [0x8b, 0x00, 0x00],
-  [0xff, 0xa5, 0x00], [0xff, 0xff, 0x96], [0x7d, 0xff, 0x00], [0x00, 0x8b, 0x8b],
-  [0x00, 0x00, 0x8b], [0xff, 0x00, 0xff], [0xff, 0x66, 0x66], [0xff, 0xc8, 0x64],
+// Mouse button codes (type=mouse). From x0rloser/anticater_vk01.
+const MOUSE_CODES = {
+  LeftClick: 0x01,
+  RightClick: 0x02,
+  MiddleClick: 0x04,
+};
+
+// Default colors for the 6 individually-addressable LEDs used by Mode 3.
+// This exact rainbow is what the device ships with; matches x0rloser's
+// captured default exactly, and the first 6 entries of our own earlier
+// (over-broad, 16-color) capture -- the remaining 10 we used to send were
+// just unused buffer space, not a real palette.
+const LED_DEFAULT_COLORS = [
+  [0xff, 0x00, 0x00], [0xff, 0x80, 0x30], [0xff, 0xff, 0x30],
+  [0x00, 0xff, 0x00], [0x00, 0xff, 0xff], [0x00, 0x00, 0xff],
 ];
 
 const LED_MODE_COUNT = 6;
+const LED_CUSTOM_COLOR_MODE = 3;
 
 // Ctrl/Shift/Alt-style combos from ANTICATER.app's own text-entry tab. These
 // don't decompose into modifier bits on this device -- each combo is an
@@ -82,11 +93,12 @@ function buildBindPackets(controlId, type, code, layer = LAYER) {
   set[1] = controlId;
   set[2] = layer;
   set[3] = type;
-  set[4] = 0x00;
+  set[4] = type === BINDING_TYPE.mouse ? 0x01 : 0x00; // mouse flag, from x0rloser/anticater_vk01
   set[5] = type;
   set[6] = 0x00;
   set[7] = 0x00;
-  set[8] = code;
+  set[8] = code & 0xff;
+  set[11] = (code >> 8) & 0xff; // high byte, for 2-byte codes like Calculator
 
   const term = new Uint8Array(64);
   term[0] = 0xfd;
@@ -96,7 +108,7 @@ function buildBindPackets(controlId, type, code, layer = LAYER) {
   return [set, term];
 }
 
-function buildLedPackets(mode, palette = LED_PALETTE) {
+function buildLedPackets(mode, colors = LED_DEFAULT_COLORS) {
   const packets = [];
   for (let idx = 0; idx < 3; idx++) {
     const p = new Uint8Array(64);
@@ -105,7 +117,7 @@ function buildLedPackets(mode, palette = LED_PALETTE) {
     p[2] = idx;
     p[3] = idx === 0 ? mode : 0x00;
     let off = 4;
-    for (const [r, g, b] of palette) {
+    for (const [r, g, b] of colors) {
       p[off++] = r;
       p[off++] = g;
       p[off++] = b;
@@ -145,11 +157,12 @@ function buildLedModeQueryPacket() {
 function parseLedModeResponse(data) {
   // data: DataView of the input report (report ID already stripped by WebHID)
   const mode = data.getUint8(1);
-  const palette = [];
-  for (let off = 2; off + 2 < data.byteLength; off += 3) {
-    palette.push([data.getUint8(off), data.getUint8(off + 1), data.getUint8(off + 2)]);
+  const colors = [];
+  for (let i = 0; i < 6; i++) {
+    const off = 2 + i * 3;
+    colors.push([data.getUint8(off), data.getUint8(off + 1), data.getUint8(off + 2)]);
   }
-  return { mode, palette };
+  return { mode, colors };
 }
 
 // Requesting layer settings triggers LAYER_SETTINGS_RESPONSE_COUNT response

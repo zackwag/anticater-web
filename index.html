@@ -83,6 +83,18 @@
       <h2>LED mode</h2>
       <p class="hint">Select one of the 6 built-in lighting modes.</p>
       <div class="led-grid" id="ledGrid"></div>
+
+      <div id="ledCustomSection" style="display:none">
+        <h3 class="subhead">Mode 3 colors</h3>
+        <p class="hint">
+          Mode 3 has 6 individually-colorable LEDs (only lit while the knob is turning).
+        </p>
+        <div class="led-color-row" id="ledColorRow"></div>
+
+        <h3 class="subhead">Presets</h3>
+        <div class="led-preset-row" id="ledPresetRow"></div>
+        <button id="ledSavePreset">Save current as preset</button>
+      </div>
     </div>
   </div>
 </div>
@@ -96,6 +108,7 @@
     <div class="modal-tabs">
       <button class="modal-tab active" data-tab="key">Keyboard key</button>
       <button class="modal-tab" data-tab="media">Media key</button>
+      <button class="modal-tab" data-tab="mouse">Mouse</button>
       <button class="modal-tab" data-tab="combo">Combo</button>
     </div>
     <div class="modal-search">
@@ -104,6 +117,7 @@
     <div class="modal-body">
       <div class="key-grid" id="keyGrid"></div>
       <div class="media-list" id="mediaList" style="display:none"></div>
+      <div class="media-list" id="mouseList" style="display:none"></div>
       <div id="comboPanel" style="display:none">
         <p class="hint" style="margin-top:0">
           Type a combo exactly as it appears in ANTICATER.app (e.g. <code>Ctrl+C</code>).
@@ -117,6 +131,21 @@
         <p id="comboError" class="combo-error" style="display:none"></p>
         <p class="hint">Known combos: <span id="comboKnownList"></span></p>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="presetNameOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3>Save preset</h3>
+      <button id="presetNameClose">Close</button>
+    </div>
+    <div class="modal-search">
+      <input id="presetNameInput" type="text" placeholder="Preset name&hellip;" maxlength="40" />
+    </div>
+    <div class="modal-body">
+      <button id="presetNameSave" class="btn-primary" style="width:100%">Save</button>
     </div>
   </div>
 </div>
