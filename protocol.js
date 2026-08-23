@@ -64,6 +64,8 @@ const MEDIACODES = {
   Mute: 0xe2,
   VolumeUp: 0xe9,
   VolumeDown: 0xea,
+  BrightnessUp: 0x6f,
+  BrightnessDown: 0x70,
   Calculator: 0x192, // 2-byte code, from x0rloser/anticater_vk01
 };
 
