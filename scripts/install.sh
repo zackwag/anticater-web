@@ -73,6 +73,10 @@ EOF
 launchctl bootout "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH"
 
+# You're presumably unlocked while running this, so apply the unlock mode
+# immediately rather than waiting for the next actual lock/unlock cycle.
+"$SCRIPT_DIR/.venv/bin/python3" "$SCRIPT_DIR/led_mode.py" "$UNLOCK_MODE" || true
+
 echo "Installed and running. Lock mode: $LOCK_MODE, unlock mode: $UNLOCK_MODE."
 echo "Logs: $LOG_PATH"
 echo "To change modes later, re-run this script with different --lock-mode/--unlock-mode."
