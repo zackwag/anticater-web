@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ANTICATER Configurator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231c1f25' stroke='%234f8cff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%234f8cff'/%3E%3Crect x='15' y='4' width='2' height='6' rx='1' fill='%234f8cff'/%3E%3C/svg%3E" />
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <h1>ANTICATER Configurator</h1>
+      <div class="sub">Unofficial WebHID replacement for ANTICATER.app</div>
+    </div>
+    <div class="connect-area">
+      <button id="exportBtn" title="Download your current bindings as a JSON file">Export config</button>
+      <button id="importBtn" title="Load bindings from a JSON file">Import config</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" />
+      <span id="statusDot" class="status-dot"></span>
+      <span id="statusText" class="sub">Not connected</span>
+      <button id="connectBtn" class="btn-primary">Connect device</button>
+    </div>
+  </div>
+
+  <div id="unsupportedNotice" class="card" style="display:none">
+    <div class="empty-state">
+      This browser doesn't support WebHID, which this app needs to talk to your device.
+      <div class="browser-links">
+        <a class="browser-link" href="https://www.google.com/chrome/" target="_blank" rel="noopener">
+          <span class="browser-badge browser-badge-chrome">C</span> Chrome
+        </a>
+        <a class="browser-link" href="https://www.microsoft.com/edge" target="_blank" rel="noopener">
+          <span class="browser-badge browser-badge-edge">E</span> Edge
+        </a>
+        <a class="browser-link" href="https://www.opera.com/" target="_blank" rel="noopener">
+          <span class="browser-badge browser-badge-opera">O</span> Opera
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="disconnectedNotice" class="card">
+    <div class="empty-state">
+      Connect your ANTICATER dial to configure it.<br />
+      Click <strong>Connect device</strong> and pick it from the browser's device list.
+    </div>
+  </div>
+
+  <div id="mainUI" style="display:none">
+    <div class="card">
+      <h2>Dial bindings</h2>
+      <p class="hint">Click a zone to assign a key or media action. Changes are sent to the device immediately.</p>
+      <div class="dial-wrap">
+        <div class="dial">
+          <div class="dial-zone zone-scrollLeft" data-control="scrollLeft">
+            <span class="label">Scroll Left</span>
+            <span class="value" data-value="scrollLeft">&mdash;</span>
+          </div>
+          <div class="dial-zone zone-scrollRight" data-control="scrollRight">
+            <span class="label">Scroll Right</span>
+            <span class="value" data-value="scrollRight">&mdash;</span>
+          </div>
+          <div class="dial-zone zone-press" data-control="press">
+            <span class="label">Press</span>
+            <span class="value" data-value="press">&mdash;</span>
+          </div>
+          <div class="dial-zone zone-pressScrollLeft" data-control="pressScrollLeft">
+            <span class="label">Press + Scroll Left</span>
+            <span class="value" data-value="pressScrollLeft">&mdash;</span>
+          </div>
+          <div class="dial-zone zone-pressScrollRight" data-control="pressScrollRight">
+            <span class="label">Press + Scroll Right</span>
+            <span class="value" data-value="pressScrollRight">&mdash;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>LED mode</h2>
+      <p class="hint">Select one of the 6 built-in lighting modes.</p>
+      <div class="led-grid" id="ledGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pickerOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="pickerTitle">Assign binding</h3>
+      <button id="pickerClose">Close</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="key">Keyboard key</button>
+      <button class="modal-tab" data-tab="media">Media key</button>
+      <button class="modal-tab" data-tab="combo">Combo</button>
+    </div>
+    <div class="modal-search">
+      <input id="keySearch" type="text" placeholder="Search keys&hellip;" />
+    </div>
+    <div class="modal-body">
+      <div class="key-grid" id="keyGrid"></div>
+      <div class="media-list" id="mediaList" style="display:none"></div>
+      <div id="comboPanel" style="display:none">
+        <p class="hint" style="margin-top:0">
+          Type a combo exactly as it appears in ANTICATER.app (e.g. <code>Ctrl+C</code>).
+          Only combos captured from the native app are supported &mdash; the device uses a
+          small fixed lookup table, not composable modifier keys.
+        </p>
+        <div class="combo-row">
+          <input id="comboInput" type="text" placeholder="Ctrl+C" />
+          <button id="comboAssign" class="btn-primary">Assign</button>
+        </div>
+        <p id="comboError" class="combo-error" style="display:none"></p>
+        <p class="hint">Known combos: <span id="comboKnownList"></span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="protocol.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
