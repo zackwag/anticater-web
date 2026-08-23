@@ -106,6 +106,45 @@ async function sendPackets(packets) {
   }
 }
 
+// Sends one packet, then collects `count` subsequent input reports.
+// WebHID delivers responses as events, not a blocking read, so this just
+// wraps that in a promise with a timeout.
+async function sendReportWithRetry(dev, packet, attempts = 3) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      await dev.sendReport(REPORT_ID, packet);
+      return;
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+      await new Promise((r) => setTimeout(r, 150));
+    }
+  }
+}
+
+function sendAndCollectReports(dev, packet, count, timeoutMs = 2000) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    const timer = setTimeout(() => {
+      dev.removeEventListener("inputreport", onReport);
+      reject(new Error(`timed out after ${results.length}/${count} response(s)`));
+    }, timeoutMs);
+    function onReport(event) {
+      results.push(event.data);
+      if (results.length >= count) {
+        clearTimeout(timer);
+        dev.removeEventListener("inputreport", onReport);
+        resolve(results);
+      }
+    }
+    dev.addEventListener("inputreport", onReport);
+    sendReportWithRetry(dev, packet).catch((err) => {
+      clearTimeout(timer);
+      dev.removeEventListener("inputreport", onReport);
+      reject(err);
+    });
+  });
+}
+
 async function applyBinding(controlName, type, code, label) {
   if (!device) return;
   try {
@@ -158,10 +197,62 @@ async function tryReconnectKnownDevice() {
   }
 }
 
+async function syncStateFromDevice(dev) {
+  try {
+    await sendAndCollectReports(dev, buildInitPacket(), 1, 2000);
+  } catch (e) {
+    console.warn("init command got no response, continuing anyway:", e);
+  }
+
+  let ok = true;
+
+  try {
+    const [ledData] = await sendAndCollectReports(dev, buildLedModeQueryPacket(), 1, 2000);
+    const { mode } = parseLedModeResponse(ledData);
+    if (mode >= 0 && mode < LED_MODE_COUNT) state.ledMode = mode;
+  } catch (e) {
+    ok = false;
+    console.warn("couldn't read LED mode from device:", e);
+  }
+
+  try {
+    const reports = await sendAndCollectReports(
+      dev, buildLayerQueryPacket(), LAYER_SETTINGS_RESPONSE_COUNT, 3000
+    );
+    const controlNameById = Object.fromEntries(
+      Object.entries(CONTROL).map(([name, id]) => [id, name])
+    );
+    for (const data of reports) {
+      const entry = parseLayerSettingEntry(data);
+      console.log("layer entry:", entry, "raw:", hex(new Uint8Array(data.buffer)));
+      const controlName = controlNameById[entry.controlId];
+      if (!controlName) continue; // not one of our 5 known controls
+      if (entry.type !== BINDING_TYPE.key && entry.type !== BINDING_TYPE.media) continue;
+      state.bindings[controlName] = { type: entry.type, code: entry.code };
+    }
+  } catch (e) {
+    ok = false;
+    console.warn("couldn't read key bindings from device:", e);
+  }
+
+  saveState();
+  renderBindings();
+  renderLed();
+  toast(
+    ok ? "Synced current settings from device" : "Couldn't fully read device state — showing cached settings",
+    !ok
+  );
+}
+
 async function openDevice(d) {
   if (!d.opened) await d.open();
   device = d;
   setConnected(true);
+  // The device isn't immediately ready for writes right after open() on
+  // some platforms; without this, the first few sendReport calls fail
+  // with "NotAllowedError: Failed to write the report".
+  await new Promise((r) => setTimeout(r, 300));
+  await syncStateFromDevice(d);
 }
 
 async function connect() {

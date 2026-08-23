@@ -16,7 +16,11 @@ const CONTROL = {
 const BINDING_TYPE = {
   key: 0x01,
   media: 0x02,
+  mouse: 0x03, // not implemented in the UI; documented for completeness
 };
+
+// Bindings live in one of 3 on-device layers/profiles. We only use layer 1.
+const LAYER = 1;
 
 // Standard USB HID keyboard usage IDs (subset in common use).
 const KEYCODES = {
@@ -72,11 +76,11 @@ const COMBO_CODES = {
   "Ctrl+C": 0xf1,
 };
 
-function buildBindPackets(controlId, type, code) {
+function buildBindPackets(controlId, type, code, layer = LAYER) {
   const set = new Uint8Array(64);
   set[0] = 0xfd;
   set[1] = controlId;
-  set[2] = 0x01;
+  set[2] = layer;
   set[3] = type;
   set[4] = 0x00;
   set[5] = type;
@@ -109,4 +113,66 @@ function buildLedPackets(mode, palette = LED_PALETTE) {
     packets.push(p);
   }
   return packets;
+}
+
+// ---------------------------------------------------------------------
+// Reading state back from the device. Unlike the write side (independently
+// reverse-engineered via debugger), this read protocol comes from
+// x0rloser's https://github.com/x0rloser/anticater_vk01, which found the
+// device responds to queries via plain input reports rather than
+// GET_FEATURE requests -- which is why we missed it entirely at first.
+// ---------------------------------------------------------------------
+
+// Must be sent (and its single response read) before other commands are
+// reliable. Purpose beyond "wakes the device up" is unconfirmed.
+function buildInitPacket() {
+  const p = new Uint8Array(64);
+  p[0] = 0xfb;
+  p[1] = 0xfb;
+  p[2] = 0xfb;
+  return p;
+}
+
+// One response packet.
+function buildLedModeQueryPacket() {
+  const p = new Uint8Array(64);
+  p[0] = 0xfa;
+  p[1] = 0xb0;
+  p[2] = 0x00;
+  return p;
+}
+
+function parseLedModeResponse(data) {
+  // data: DataView of the input report (report ID already stripped by WebHID)
+  const mode = data.getUint8(1);
+  const palette = [];
+  for (let off = 2; off + 2 < data.byteLength; off += 3) {
+    palette.push([data.getUint8(off), data.getUint8(off + 1), data.getUint8(off + 2)]);
+  }
+  return { mode, palette };
+}
+
+// Requesting layer settings triggers LAYER_SETTINGS_RESPONSE_COUNT response
+// packets, one per key slot on the device (this firmware is shared across
+// ANTICATER products with more physical keys than the VK-01 dial has).
+const LAYER_SETTINGS_RESPONSE_COUNT = 0x19;
+
+function buildLayerQueryPacket(layer = LAYER) {
+  const p = new Uint8Array(64);
+  p[0] = 0xfa;
+  p[1] = LAYER_SETTINGS_RESPONSE_COUNT;
+  p[2] = 0x00;
+  p[3] = layer;
+  return p;
+}
+
+// Mirrors buildBindPackets' layout: [0]=0xfa [1]=key slot [2]=layer
+// [3]=type [4..7] reserved/uncertain [8]=code low byte [11]=code high byte.
+function parseLayerSettingEntry(data) {
+  return {
+    controlId: data.getUint8(1),
+    layer: data.getUint8(2),
+    type: data.getUint8(3),
+    code: data.getUint8(8) | (data.getUint8(11) << 8),
+  };
 }

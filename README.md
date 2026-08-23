@@ -8,9 +8,12 @@ so it only works in Chromium-based browsers (Chrome, Edge, Opera).
 If you own an ANTICATER VK-01 (USB vendor/product ID `0x514C:0x8850`) and found this by
 searching for it, you're in the right place.
 
-This is **not affiliated with or endorsed by the device's manufacturer**. The protocol
-was reverse-engineered by intercepting `libhidapi` calls in the native app with a
-debugger — see [`protocol.js`](./protocol.js) for the documented wire format.
+This is **not affiliated with or endorsed by the device's manufacturer**. The write
+side of the protocol was reverse-engineered by intercepting `libhidapi` calls in the
+native app with a debugger; the read side comes from
+[x0rloser/anticater_vk01](https://github.com/x0rloser/anticater_vk01), who found the
+device responds to queries via plain input reports rather than `GET_FEATURE` requests.
+See [`protocol.js`](./protocol.js) for the documented wire format.
 
 ## Using it
 
@@ -36,14 +39,15 @@ app controls).
 
 ## What it supports
 
+- Reading your current bindings and LED mode from the device on connect, so the UI
+  reflects what's actually set rather than a locally-cached guess
 - Binding a keyboard key or media key to each of the dial's 5 gestures (Scroll Left,
   Press, Scroll Right, Press+Scroll Left, Press+Scroll Right)
 - A small set of Ctrl/Shift/Alt-style combos (see below — this device uses a fixed
   lookup table, not composable modifier bits, so only combos that have been captured
   are supported)
 - Selecting one of the 6 built-in LED modes
-- Exporting/importing your configuration as JSON (the device has no readable
-  persisted state, so this is the only backup mechanism available)
+- Exporting/importing your configuration as JSON, as a portable backup
 
 Not supported (out of scope for now): the Procreate action-preset tab, the delay/macro
 recording tab, and RGB palette editing.
@@ -59,6 +63,11 @@ locks/unlocks, independent of the browser — see [`scripts/`](./scripts).
 this state (not this app or your browser) — unplug it and plug it back in. Bindings and
 LED mode persist through the power cycle since they live in the device's own memory.
 
+**Console shows `NotAllowedError: Failed to write the report` right after the page
+auto-reconnects.** The cached WebHID connection from a previous page load can go stale.
+Click **Disconnect**, then **Connect device** again to get a fresh connection — no
+need to unplug the device for this one.
+
 ## Contributing a new combo code
 
 The `Ctrl+Shift+Alt` combo tab in `ANTICATER.app` doesn't compose modifiers the way
@@ -73,6 +82,11 @@ please [open an issue](../../issues/new) with:
 2. The resulting byte, captured by intercepting the native app's HID writes (see
    `protocol.js` header comments for the report format — the combo code is the last
    non-zero byte before the padding in the `0xFD` "set binding" packet)
+
+## Credits
+
+- Read protocol (query + input-report responses) discovered by
+  [x0rloser/anticater_vk01](https://github.com/x0rloser/anticater_vk01)
 
 ## License
 
