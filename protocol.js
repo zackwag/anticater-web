@@ -1,4 +1,4 @@
-// Reverse-engineered ANTICATER dial protocol.
+// Reverse-engineered ANTICATER VK-01 dial protocol.
 // Device: VID 0x514C / PID 0x8850, HID usage page 0xFF00, usage 0x01.
 // Output report ID 0x03. All report bytes below EXCLUDE the report ID
 // (WebHID's sendReport(reportId, data) takes it separately).

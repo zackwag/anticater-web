@@ -1,9 +1,12 @@
 # anticater-web
 
-An unofficial, browser-based configurator for the ANTICATER dial/macro-pad, built as a
-replacement for the bundled `ANTICATER.app` (which requires Rosetta and is fairly
-clunky). Uses the [WebHID API](https://developer.mozilla.org/en-US/docs/Web/API/WebHID_API),
+An unofficial, browser-based configurator for the **ANTICATER VK-01** dial/macro-pad,
+built as a replacement for the bundled `ANTICATER.app` (which requires Rosetta and is
+fairly clunky). Uses the [WebHID API](https://developer.mozilla.org/en-US/docs/Web/API/WebHID_API),
 so it only works in Chromium-based browsers (Chrome, Edge, Opera).
+
+If you own an ANTICATER VK-01 (USB vendor/product ID `0x514C:0x8850`) and found this by
+searching for it, you're in the right place.
 
 This is **not affiliated with or endorsed by the device's manufacturer**. The protocol
 was reverse-engineered by intercepting `libhidapi` calls in the native app with a
