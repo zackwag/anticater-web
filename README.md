@@ -92,6 +92,20 @@ For deeper, per-application remapping and other transports, other people have bu
   routes the knob's Bluetooth media keys on Windows into Home Assistant / Music
   Assistant via MQTT
 
+## Development
+
+`protocol.js` has a small test suite (Node's built-in test runner, no
+dependencies to install):
+
+```sh
+node --test
+```
+
+Fixtures are real byte sequences captured from the physical device during
+this project's reverse-engineering, not synthetic guesses -- the strongest
+regression protection available, since a subtle bug here otherwise only
+shows up as "the physical device does the wrong thing."
+
 ## Credits
 
 - Read protocol (query + input-report responses) discovered by

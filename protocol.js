@@ -125,7 +125,14 @@ function buildBindPackets(controlId, type, code, layer = LAYER) {
   set[2] = layer;
   set[3] = type;
   set[4] = type === BINDING_TYPE.mouse ? 0x01 : 0x00; // mouse flag, from x0rloser/anticater_vk01
-  set[5] = type;
+  // 1 for a plain single-byte keyboard key, 2 for everything else (media
+  // codes, and any 2-byte code such as a modifier+key combo). Confirmed
+  // against captures: matches type for plain key/media codes since those
+  // happen to coincide (key=1,media=2), but a key-type 2-byte combo code
+  // is 2, not 1 -- captured from a working Ctrl+C/Cmd+V binding, where
+  // using 1 here (this file's earlier bug) still worked in practice, but
+  // didn't match the native app's own bytes.
+  set[5] = type === BINDING_TYPE.key && code <= 0xff ? 0x01 : 0x02;
   set[6] = 0x00;
   set[7] = 0x00;
   set[8] = code & 0xff;
@@ -218,5 +225,17 @@ function parseLayerSettingEntry(data) {
     layer: data.getUint8(2),
     type: data.getUint8(3),
     code: data.getUint8(8) | (data.getUint8(11) << 8),
+  };
+}
+
+// Node-only: lets the test suite `require()` this file. Skipped entirely in
+// the browser (module is undefined there), so it never affects the app.
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    REPORT_ID, CONTROL, BINDING_TYPE, LAYER, KEYCODES, MEDIACODES, MOUSE_CODES,
+    LED_DEFAULT_COLORS, LED_MODE_COUNT, LED_CUSTOM_COLOR_MODE, MODIFIER_CODES,
+    combineModifierKey, buildBindPackets, buildLedPackets, buildInitPacket,
+    buildLedModeQueryPacket, parseLedModeResponse, LAYER_SETTINGS_RESPONSE_COUNT,
+    buildLayerQueryPacket, parseLayerSettingEntry,
   };
 }

@@ -1,0 +1,8 @@
+{
+  "name": "anticater-web",
+  "private": true,
+  "description": "Unofficial WebHID configurator for the ANTICATER VK-01 dial",
+  "scripts": {
+    "test": "node --test"
+  }
+}
