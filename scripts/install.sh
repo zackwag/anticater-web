@@ -24,13 +24,20 @@ PLIST_PATH="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG_PATH="/tmp/anticater-led-watch.log"
 
 if ! command -v brew >/dev/null 2>&1; then
-  echo "Homebrew is required (for hidapi). Install it from https://brew.sh first." >&2
+  echo "Error: Homebrew isn't installed." >&2
+  echo "This script needs it to install hidapi, which lets Python talk to the device." >&2
+  echo "Install Homebrew from https://brew.sh, then run this script again." >&2
   exit 1
 fi
 
 if ! brew list hidapi >/dev/null 2>&1; then
-  echo "Installing hidapi..."
-  brew install hidapi
+  echo "Error: hidapi isn't installed." >&2
+  echo "Install it with:" >&2
+  echo "" >&2
+  echo "    brew install hidapi" >&2
+  echo "" >&2
+  echo "Then run this script again." >&2
+  exit 1
 fi
 
 if [[ ! -d "$SCRIPT_DIR/.venv" ]]; then
