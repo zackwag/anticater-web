@@ -343,32 +343,21 @@ function switchTab(tab) {
   $("#mediaList").style.display = tab === "media" ? "flex" : "none";
   $("#comboPanel").style.display = tab === "combo" ? "block" : "none";
   $("#keySearch").parentElement.style.display = tab === "key" ? "block" : "none";
-  if (tab === "combo") {
-    $("#comboError").style.display = "none";
-    $("#comboInput").value = "";
-    $("#comboInput").focus();
-  }
 }
 
-function renderComboKnownList() {
-  $("#comboKnownList").innerHTML = Object.keys(COMBO_CODES)
-    .map((c) => `<code>${c}</code>`)
-    .join(" ");
-}
-
-function assignCombo() {
-  const text = $("#comboInput").value.trim();
-  const code = COMBO_CODES[text];
-  const err = $("#comboError");
-  if (code === undefined) {
-    err.textContent = text
-      ? `"${text}" hasn't been captured yet. Set it in ANTICATER.app, tell Claude the resulting byte, and it'll be added.`
-      : "Type a combo first.";
-    err.style.display = "block";
-    return;
-  }
-  applyBinding(activeControl, BINDING_TYPE.key, code, text);
-  closePicker();
+function renderComboList() {
+  const list = $("#comboList");
+  list.innerHTML = "";
+  Object.entries(COMBO_CODES).forEach(([name, code]) => {
+    const btn = document.createElement("button");
+    btn.className = "media-btn";
+    btn.textContent = name;
+    btn.addEventListener("click", () => {
+      applyBinding(activeControl, BINDING_TYPE.key, code, name);
+      closePicker();
+    });
+    list.appendChild(btn);
+  });
 }
 
 // ---------- rendering ----------
@@ -579,7 +568,6 @@ $("#pickerOverlay").addEventListener("click", (e) => {
   if (e.target.id === "pickerOverlay") closePicker();
 });
 $$(".modal-tab").forEach((t) => t.addEventListener("click", () => switchTab(t.dataset.tab)));
-$("#comboAssign").addEventListener("click", assignCombo);
 $("#ledSavePreset").addEventListener("click", openPresetNameDialog);
 $("#presetNameClose").addEventListener("click", closePresetNameDialog);
 $("#presetNameSave").addEventListener("click", saveCurrentAsPreset);
@@ -588,9 +576,6 @@ $("#presetNameInput").addEventListener("keydown", (e) => {
 });
 $("#presetNameOverlay").addEventListener("click", (e) => {
   if (e.target.id === "presetNameOverlay") closePresetNameDialog();
-});
-$("#comboInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") assignCombo();
 });
 $("#keySearch").addEventListener("input", (e) => renderKeyGrid(e.target.value));
 
@@ -620,7 +605,7 @@ $("#versionTag").textContent = `v${APP_VERSION}`;
 buildLedGrid();
 switchTab("key");
 renderMediaList();
-renderComboKnownList();
+renderComboList();
 renderBindings();
 renderLed();
 setConnected(false);

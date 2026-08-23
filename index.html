@@ -108,7 +108,7 @@
     <div class="modal-tabs">
       <button class="modal-tab active" data-tab="key">Keyboard key</button>
       <button class="modal-tab" data-tab="media">Media key</button>
-      <button class="modal-tab" data-tab="combo">Combo</button>
+      <button class="modal-tab" data-tab="combo">Modifier</button>
     </div>
     <div class="modal-search">
       <input id="keySearch" type="text" placeholder="Search keys&hellip;" />
@@ -118,16 +118,11 @@
       <div class="media-list" id="mediaList" style="display:none"></div>
       <div id="comboPanel" style="display:none">
         <p class="hint" style="margin-top:0">
-          Type a combo exactly as it appears in ANTICATER.app (e.g. <code>Ctrl+C</code>).
-          Only combos captured from the native app are supported &mdash; the device uses a
-          small fixed lookup table, not composable modifier keys.
+          Holds a single modifier key while the gesture is active &mdash; this device's
+          "combo" feature doesn't actually support modifier+key combos like Ctrl+C, only
+          holding one modifier on its own.
         </p>
-        <div class="combo-row">
-          <input id="comboInput" type="text" placeholder="Ctrl+C" />
-          <button id="comboAssign" class="btn-primary">Assign</button>
-        </div>
-        <p id="comboError" class="combo-error" style="display:none"></p>
-        <p class="hint">Known combos: <span id="comboKnownList"></span></p>
+        <div class="media-list" id="comboList"></div>
       </div>
     </div>
   </div>

@@ -89,12 +89,23 @@ const LED_DEFAULT_COLORS = [
 const LED_MODE_COUNT = 6;
 const LED_CUSTOM_COLOR_MODE = 3;
 
-// Ctrl/Shift/Alt-style combos from ANTICATER.app's own text-entry tab. These
-// don't decompose into modifier bits on this device -- each combo is an
-// opaque single-byte code (type=key) outside the normal HID usage range,
-// captured individually from the native app. Extend as more are captured.
+// What looked like a Ctrl/Shift/Alt "combo" tab in ANTICATER.app turns out
+// not to encode combos at all -- it's a fixed set of 8 single-modifier-hold
+// bindings (type=key). Exhaustively verified by driving the native app's UI
+// through every modifier button (including multi-modifier ones) and
+// capturing the resulting byte: multi-modifier clicks always collapse to
+// whichever single modifier has priority (Ctrl > Alt > Shift > Win), and
+// which key you additionally select never changes the byte at all. Each
+// code is exactly the standard USB HID modifier usage (0xE0-0xE7) + 0x11.
 const COMBO_CODES = {
-  "Ctrl+C": 0xf1,
+  "Ctrl": 0xf1,
+  "Shift": 0xf2,
+  "Alt": 0xf3,
+  "Win": 0xf4,
+  "Right Ctrl": 0xf5,
+  "Right Shift": 0xf6,
+  "Right Alt": 0xf7,
+  "Right Win": 0xf8,
 };
 
 function buildBindPackets(controlId, type, code, layer = LAYER) {

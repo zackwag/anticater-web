@@ -43,14 +43,16 @@ app controls).
   reflects what's actually set rather than a locally-cached guess
 - Binding a keyboard key or media key to each of the dial's 5 gestures (Scroll Left,
   Press, Scroll Right, Press+Scroll Left, Press+Scroll Right)
-- A small set of Ctrl/Shift/Alt-style combos (see below — this device uses a fixed
-  lookup table, not composable modifier bits, so only combos that have been captured
-  are supported)
-- Selecting one of the 6 built-in LED modes
+- Binding a single modifier hold (Ctrl/Shift/Alt/Win, either side) to a gesture —
+  this is the full extent of what the device's "combo" feature actually does; despite
+  the UI implying otherwise, it can't send real modifier+key combos like Ctrl+C (see
+  `protocol.js` for how this was verified)
+- Selecting one of the 6 built-in LED modes, including custom per-LED colors and
+  presets for Mode 3
 - Exporting/importing your configuration as JSON, as a portable backup
 
-Not supported (out of scope for now): the Procreate action-preset tab, the delay/macro
-recording tab, and RGB palette editing.
+Not supported (out of scope for now): the Procreate action-preset tab and the
+delay/macro recording tab.
 
 ## Automation
 
@@ -71,21 +73,6 @@ need to unplug the device for this one.
 **Connecting fails, or every write silently does nothing.** Only one program can
 hold the device's USB HID connection at a time — close `ANTICATER.app` (and any other
 tool talking to the device) before connecting here.
-
-## Contributing a new combo code
-
-The `Ctrl+Shift+Alt` combo tab in `ANTICATER.app` doesn't compose modifiers the way
-you'd expect — each combo (e.g. `Ctrl+C`) is sent as a single fixed byte code, from
-what looks like a small firmware-side lookup table (roughly 24 possible values). We
-can only support combos that have actually been captured off the wire.
-
-If you want a combo that isn't in [`protocol.js`](./protocol.js)'s `COMBO_CODES` table,
-please [open an issue](../../issues/new) with:
-
-1. The exact combo text as typed into `ANTICATER.app`'s Ctrl/Shift/Alt tab (e.g. `Ctrl+V`)
-2. The resulting byte, captured by intercepting the native app's HID writes (see
-   `protocol.js` header comments for the report format — the combo code is the last
-   non-zero byte before the padding in the `0xFD` "set binding" packet)
 
 ## Related projects
 
