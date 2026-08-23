@@ -1,5 +1,0 @@
-services:
-  anticater-web:
-    build: .
-    ports:
-      - "127.0.0.1:8743:80"

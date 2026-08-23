@@ -14,13 +14,13 @@ debugger — see [`protocol.js`](./protocol.js) for the documented wire format.
 WebHID requires a secure context, so you can't just open `index.html` as a `file://`
 URL — it needs to be served and opened from `localhost`.
 
-**With Docker:**
+**With Docker** (no need to clone this repo — just run this):
 
 ```sh
-docker compose up
+docker run -p 127.0.0.1:8743:80 zackwag/anticater-web
 ```
 
-**Without Docker:**
+**Without Docker**, from a checkout of this repo:
 
 ```sh
 python3 -m http.server 8743
