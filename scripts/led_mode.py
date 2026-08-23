@@ -7,6 +7,7 @@ hidapi).
 
 Usage: led_mode.py <mode 0-5>
 """
+import datetime
 import sys
 
 import hid
@@ -51,13 +52,19 @@ def find_device_path():
 
 
 def set_led_mode(mode):
+    ts = datetime.datetime.now().isoformat()
     path = find_device_path()
     if path is None:
-        print("ANTICATER device not found", file=sys.stderr)
+        print(f"[{ts}] set_led_mode({mode}): device not found", file=sys.stderr)
         return False
-    with hid.Device(path=path) as h:
-        for pkt in build_led_packets(mode):
-            h.write(pkt)
+    try:
+        with hid.Device(path=path) as h:
+            for pkt in build_led_packets(mode):
+                h.write(pkt)
+    except Exception as e:
+        print(f"[{ts}] set_led_mode({mode}): write failed: {e}", file=sys.stderr)
+        return False
+    print(f"[{ts}] set_led_mode({mode}): ok")
     return True
 
 

@@ -6,11 +6,12 @@ up (see README.md in this directory).
 Usage: lock_watch.py [--lock-mode N] [--unlock-mode N]
 """
 import argparse
+import datetime
 import subprocess
 import sys
 from pathlib import Path
 
-from Foundation import NSDistributedNotificationCenter, NSObject
+from Foundation import NSDistributedNotificationCenter, NSObject, NSWorkspace
 from PyObjCTools import AppHelper
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -25,16 +26,27 @@ def parse_args():
     return p.parse_args()
 
 
-def set_mode(mode):
+def set_mode(event, mode):
+    ts = datetime.datetime.now().isoformat()
+    print(f"[{ts}] {event} notification received, setting mode {mode}")
     subprocess.run([PYTHON, str(LED_MODE_SCRIPT), str(mode)], check=False)
 
 
 class Watcher(NSObject):
     def screenLocked_(self, notification):
-        set_mode(self.lock_mode)
+        set_mode("lock", self.lock_mode)
 
     def screenUnlocked_(self, notification):
-        set_mode(self.unlock_mode)
+        set_mode("unlock", self.unlock_mode)
+
+    def systemDidWake_(self, notification):
+        # A distributed notification posted while this process was itself
+        # asleep (e.g. after full system sleep, as opposed to an explicit
+        # Ctrl+Cmd+Q lock which keeps the Mac awake) can be missed entirely.
+        # macOS locks the screen by default on sleep, so treat waking up as
+        # a safety-net "assume locked" -- the real unlock notification still
+        # fires normally once you actually enter your password.
+        set_mode("wake (safety net, assuming locked)", self.lock_mode)
 
 
 def main():
@@ -49,6 +61,9 @@ def main():
     )
     center.addObserver_selector_name_object_(
         watcher, "screenUnlocked:", "com.apple.screenIsUnlocked", None
+    )
+    NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(
+        watcher, "systemDidWake:", "NSWorkspaceDidWakeNotification", None
     )
     AppHelper.runConsoleEventLoop()
 
