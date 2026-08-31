@@ -38,6 +38,12 @@ def set_mode(event, mode):
 
 
 class Watcher(NSObject):
+    def screensaverStarted_(self, notification):
+        set_mode("screensaver started", self.lock_mode)
+
+    def screensaverStopped_(self, notification):
+        set_mode("screensaver stopped", self.unlock_mode)
+
     def screenLocked_(self, notification):
         set_mode("lock", self.lock_mode)
 
@@ -61,6 +67,12 @@ def main():
     watcher.unlock_mode = args.unlock_mode
 
     center = NSDistributedNotificationCenter.defaultCenter()
+    center.addObserver_selector_name_object_(
+        watcher, "screensaverStarted:", "com.apple.screensaver.didstart", None
+    )
+    center.addObserver_selector_name_object_(
+        watcher, "screensaverStopped:", "com.apple.screensaver.didstop", None
+    )
     center.addObserver_selector_name_object_(
         watcher, "screenLocked:", "com.apple.screenIsLocked", None
     )
