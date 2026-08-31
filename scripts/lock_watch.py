@@ -62,6 +62,8 @@ class Watcher(NSObject):
 
 def main():
     args = parse_args()
+    set_mode("startup", args.unlock_mode)
+
     watcher = Watcher.alloc().init()
     watcher.lock_mode = args.lock_mode
     watcher.unlock_mode = args.unlock_mode
