@@ -7,17 +7,16 @@ Usage: lock_watch.py [--lock-mode N] [--unlock-mode N]
 """
 import argparse
 import datetime
-import subprocess
-import sys
-from pathlib import Path
+import time
 
 from AppKit import NSWorkspace
 from Foundation import NSDistributedNotificationCenter, NSObject
 from PyObjCTools import AppHelper
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-LED_MODE_SCRIPT = SCRIPT_DIR / "led_mode.py"
-PYTHON = sys.executable
+from led_mode import set_led_mode
+
+MIN_WRITE_INTERVAL = 1.0
+_last_write = 0.0
 
 
 def parse_args():
@@ -28,9 +27,14 @@ def parse_args():
 
 
 def set_mode(event, mode):
+    global _last_write
     ts = datetime.datetime.now().isoformat()
     print(f"[{ts}] {event} notification received, setting mode {mode}")
-    subprocess.run([PYTHON, str(LED_MODE_SCRIPT), str(mode)], check=False)
+    elapsed = time.monotonic() - _last_write
+    if elapsed < MIN_WRITE_INTERVAL:
+        time.sleep(MIN_WRITE_INTERVAL - elapsed)
+    set_led_mode(mode)
+    _last_write = time.monotonic()
 
 
 class Watcher(NSObject):

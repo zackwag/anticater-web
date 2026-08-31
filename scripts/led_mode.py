@@ -9,6 +9,7 @@ Usage: led_mode.py <mode 0-5>
 """
 import datetime
 import sys
+import time
 
 import hid
 
@@ -51,21 +52,28 @@ def find_device_path():
     return None
 
 
-def set_led_mode(mode):
-    ts = datetime.datetime.now().isoformat()
-    path = find_device_path()
-    if path is None:
-        print(f"[{ts}] set_led_mode({mode}): device not found", file=sys.stderr)
-        return False
-    try:
-        with hid.Device(path=path) as h:
-            for pkt in build_led_packets(mode):
-                h.write(pkt)
-    except Exception as e:
-        print(f"[{ts}] set_led_mode({mode}): write failed: {e}", file=sys.stderr)
-        return False
-    print(f"[{ts}] set_led_mode({mode}): ok")
-    return True
+def set_led_mode(mode, retries=2, retry_delay=0.5):
+    for attempt in range(1 + retries):
+        ts = datetime.datetime.now().isoformat()
+        path = find_device_path()
+        if path is None:
+            if attempt < retries:
+                time.sleep(retry_delay)
+                continue
+            print(f"[{ts}] set_led_mode({mode}): device not found", file=sys.stderr)
+            return False
+        try:
+            with hid.Device(path=path) as h:
+                for pkt in build_led_packets(mode):
+                    h.write(pkt)
+            print(f"[{ts}] set_led_mode({mode}): ok")
+            return True
+        except Exception as e:
+            if attempt < retries:
+                time.sleep(retry_delay)
+            else:
+                print(f"[{ts}] set_led_mode({mode}): write failed: {e}", file=sys.stderr)
+                return False
 
 
 if __name__ == "__main__":

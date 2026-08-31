@@ -640,6 +640,19 @@ if (navigator.hid) {
   });
 }
 
+document.addEventListener("visibilitychange", async () => {
+  if (!navigator.hid) return;
+  if (document.hidden) {
+    if (device) {
+      await device.close();
+      device = null;
+      setConnected(false);
+    }
+  } else {
+    if (!device) await tryReconnectKnownDevice();
+  }
+});
+
 function checkWebHidSupport() {
   const supported = !!navigator.hid;
   $("#unsupportedNotice").style.display = supported ? "none" : "block";
