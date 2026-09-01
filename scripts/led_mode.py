@@ -8,6 +8,7 @@ hidapi).
 Usage: led_mode.py <mode 0-5>
 """
 import datetime
+import signal
 import sys
 import time
 
@@ -26,6 +27,15 @@ LED_PALETTE = [
     (0xff, 0xa5, 0x00), (0xff, 0xff, 0x96), (0x7d, 0xff, 0x00), (0x00, 0x8b, 0x8b),
     (0x00, 0x00, 0x8b), (0xff, 0x00, 0xff), (0xff, 0x66, 0x66), (0xff, 0xc8, 0x64),
 ]
+
+
+def build_init_packet():
+    p = bytearray(65)
+    p[0] = REPORT_ID
+    p[1] = 0xfb
+    p[2] = 0xfb
+    p[3] = 0xfb
+    return bytes(p)
 
 
 def build_led_packets(mode, palette=LED_PALETTE):
@@ -64,8 +74,16 @@ def set_led_mode(mode, retries=2, retry_delay=0.5):
             return False
         try:
             with hid.Device(path=path) as h:
-                for pkt in build_led_packets(mode):
-                    h.write(pkt)
+                # Block SIGTERM during the multi-packet write so a
+                # launchctl stop can't kill us mid-sequence and leave
+                # the device with a partial command (which hangs it).
+                prev = signal.signal(signal.SIGTERM, signal.SIG_IGN)
+                try:
+                    h.write(build_init_packet())
+                    for pkt in build_led_packets(mode):
+                        h.write(pkt)
+                finally:
+                    signal.signal(signal.SIGTERM, prev)
             print(f"[{ts}] set_led_mode({mode}): ok")
             return True
         except Exception as e:

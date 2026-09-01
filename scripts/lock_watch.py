@@ -10,13 +10,15 @@ import datetime
 import time
 
 from AppKit import NSWorkspace
-from Foundation import NSDistributedNotificationCenter, NSObject
+from Foundation import NSDistributedNotificationCenter, NSObject, NSTimer
 from PyObjCTools import AppHelper
 
 from led_mode import set_led_mode
 
 MIN_WRITE_INTERVAL = 1.0
+HEARTBEAT_INTERVAL = 300.0
 _last_write = 0.0
+_current_mode = None
 
 
 def parse_args():
@@ -27,17 +29,22 @@ def parse_args():
 
 
 def set_mode(event, mode):
-    global _last_write
+    global _last_write, _current_mode
     ts = datetime.datetime.now().isoformat()
     print(f"[{ts}] {event} notification received, setting mode {mode}")
     elapsed = time.monotonic() - _last_write
     if elapsed < MIN_WRITE_INTERVAL:
         time.sleep(MIN_WRITE_INTERVAL - elapsed)
     set_led_mode(mode)
+    _current_mode = mode
     _last_write = time.monotonic()
 
 
 class Watcher(NSObject):
+    def heartbeat_(self, timer):
+        if _current_mode is not None:
+            set_mode("heartbeat", _current_mode)
+
     def screensaverStarted_(self, notification):
         set_mode("screensaver started", self.lock_mode)
 
@@ -83,6 +90,9 @@ def main():
     )
     NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(
         watcher, "systemDidWake:", "NSWorkspaceDidWakeNotification", None
+    )
+    NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+        HEARTBEAT_INTERVAL, watcher, "heartbeat:", None, True
     )
     AppHelper.runConsoleEventLoop()
 
