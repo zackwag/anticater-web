@@ -13,7 +13,7 @@ from AppKit import NSWorkspace
 from Foundation import NSDistributedNotificationCenter, NSObject, NSTimer
 from PyObjCTools import AppHelper
 
-from led_mode import set_led_mode
+from led_mode import DeviceConnection
 
 MIN_WRITE_INTERVAL = 1.0
 HEARTBEAT_INTERVAL = 300.0
@@ -21,6 +21,7 @@ LOCK_DELAY = 3.0
 _last_write = 0.0
 _current_mode = None
 _screen_locked = False
+_device = DeviceConnection()
 
 
 def parse_args():
@@ -39,7 +40,7 @@ def set_mode(event, mode, delay=0.0):
     elapsed = time.monotonic() - _last_write
     if elapsed < MIN_WRITE_INTERVAL:
         time.sleep(MIN_WRITE_INTERVAL - elapsed)
-    set_led_mode(mode)
+    _device.write_led_mode(mode)
     _current_mode = mode
     _last_write = time.monotonic()
 

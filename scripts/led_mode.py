@@ -49,7 +49,61 @@ def find_device_path():
     return None
 
 
+class DeviceConnection:
+    """Keeps a persistent HID connection to avoid repeated open/close cycles
+    that crash the device firmware."""
+
+    def __init__(self):
+        self._handle = None
+
+    def _open(self):
+        path = find_device_path()
+        if path is None:
+            return False
+        try:
+            self._handle = hid.Device(path=path)
+            return True
+        except Exception:
+            self._handle = None
+            return False
+
+    def close(self):
+        if self._handle is not None:
+            try:
+                self._handle.close()
+            except Exception:
+                pass
+            self._handle = None
+
+    def write_led_mode(self, mode, retries=2, retry_delay=0.5):
+        for attempt in range(1 + retries):
+            ts = datetime.datetime.now().isoformat()
+            if self._handle is None and not self._open():
+                if attempt < retries:
+                    time.sleep(retry_delay)
+                    continue
+                print(f"[{ts}] set_led_mode({mode}): device not found", file=sys.stderr)
+                return False
+            try:
+                prev = signal.signal(signal.SIGTERM, signal.SIG_IGN)
+                try:
+                    for pkt in build_led_packets(mode):
+                        self._handle.write(pkt)
+                finally:
+                    signal.signal(signal.SIGTERM, prev)
+                print(f"[{ts}] set_led_mode({mode}): ok")
+                return True
+            except Exception as e:
+                self.close()
+                if attempt < retries:
+                    time.sleep(retry_delay)
+                else:
+                    print(f"[{ts}] set_led_mode({mode}): write failed: {e}", file=sys.stderr)
+                    return False
+
+
 def set_led_mode(mode, retries=2, retry_delay=0.5):
+    """One-shot open/write/close for CLI usage."""
     for attempt in range(1 + retries):
         ts = datetime.datetime.now().isoformat()
         path = find_device_path()
@@ -61,9 +115,6 @@ def set_led_mode(mode, retries=2, retry_delay=0.5):
             return False
         try:
             with hid.Device(path=path) as h:
-                # Block SIGTERM during the multi-packet write so a
-                # launchctl stop can't kill us mid-sequence and leave
-                # the device with a partial command (which hangs it).
                 prev = signal.signal(signal.SIGTERM, signal.SIG_IGN)
                 try:
                     for pkt in build_led_packets(mode):
