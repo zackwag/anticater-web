@@ -29,15 +29,6 @@ LED_PALETTE = [
 ]
 
 
-def build_init_packet():
-    p = bytearray(65)
-    p[0] = REPORT_ID
-    p[1] = 0xfb
-    p[2] = 0xfb
-    p[3] = 0xfb
-    return bytes(p)
-
-
 def build_led_packets(mode, palette=LED_PALETTE):
     packets = []
     for idx in range(3):
@@ -79,7 +70,6 @@ def set_led_mode(mode, retries=2, retry_delay=0.5):
                 # the device with a partial command (which hangs it).
                 prev = signal.signal(signal.SIGTERM, signal.SIG_IGN)
                 try:
-                    h.write(build_init_packet())
                     for pkt in build_led_packets(mode):
                         h.write(pkt)
                 finally:
