@@ -17,8 +17,10 @@ from led_mode import set_led_mode
 
 MIN_WRITE_INTERVAL = 1.0
 HEARTBEAT_INTERVAL = 300.0
+LOCK_DELAY = 3.0
 _last_write = 0.0
 _current_mode = None
+_screen_locked = False
 
 
 def parse_args():
@@ -28,10 +30,12 @@ def parse_args():
     return p.parse_args()
 
 
-def set_mode(event, mode):
+def set_mode(event, mode, delay=0.0):
     global _last_write, _current_mode
     ts = datetime.datetime.now().isoformat()
     print(f"[{ts}] {event} notification received, setting mode {mode}")
+    if delay > 0:
+        time.sleep(delay)
     elapsed = time.monotonic() - _last_write
     if elapsed < MIN_WRITE_INTERVAL:
         time.sleep(MIN_WRITE_INTERVAL - elapsed)
@@ -42,29 +46,39 @@ def set_mode(event, mode):
 
 class Watcher(NSObject):
     def heartbeat_(self, timer):
-        if _current_mode is not None:
+        if _current_mode is not None and _screen_locked:
             set_mode("heartbeat", _current_mode)
 
     def screensaverStarted_(self, notification):
-        set_mode("screensaver started", self.lock_mode)
+        global _screen_locked
+        _screen_locked = True
+        set_mode("screensaver started", self.lock_mode, delay=LOCK_DELAY)
 
     def screensaverStopped_(self, notification):
+        global _screen_locked
+        _screen_locked = False
         set_mode("screensaver stopped", self.unlock_mode)
 
     def screenLocked_(self, notification):
-        set_mode("lock", self.lock_mode)
+        global _screen_locked
+        _screen_locked = True
+        set_mode("lock", self.lock_mode, delay=LOCK_DELAY)
 
     def screenUnlocked_(self, notification):
+        global _screen_locked
+        _screen_locked = False
         set_mode("unlock", self.unlock_mode)
 
     def systemDidWake_(self, notification):
+        global _screen_locked
+        _screen_locked = True
         # A distributed notification posted while this process was itself
         # asleep (e.g. after full system sleep, as opposed to an explicit
         # Ctrl+Cmd+Q lock which keeps the Mac awake) can be missed entirely.
         # macOS locks the screen by default on sleep, so treat waking up as
         # a safety-net "assume locked" -- the real unlock notification still
         # fires normally once you actually enter your password.
-        set_mode("wake (safety net, assuming locked)", self.lock_mode)
+        set_mode("wake (safety net, assuming locked)", self.lock_mode, delay=LOCK_DELAY)
 
 
 def main():
