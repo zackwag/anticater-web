@@ -28,6 +28,15 @@ npm test
 
 (runs `node --test` against `test/protocol.test.js`)
 
+Run the linter:
+
+```sh
+npm install
+npm run lint
+```
+
+(runs ESLint over `app.js`, `protocol.js`, `version.js`, and the test suite)
+
 A `Dockerfile` (nginx-based) is provided as an alternative way to serve the app; see the README for `docker run` usage.
 
 ## Commit messages and pull requests

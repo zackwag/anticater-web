@@ -6,7 +6,7 @@ Unofficial browser-based WebHID configurator for the ANTICATER VK-01 dial/macro-
 
 ## Setup
 
-No install step — plain static files, no dependencies beyond Node for running tests.
+No install step to run the app — plain static files. Run `npm install` if you need to lint (ESLint is a devDependency).
 
 ## Build / Run
 
@@ -25,6 +25,8 @@ node --test
 ```
 
 (also runnable as `npm test`). Tests live in `test/protocol.test.js` and cover `protocol.js`, the reverse-engineered wire format.
+
+Lint with `npm run lint` (ESLint, flat config in `eslint.config.js`). CI runs both `test` and `lint` as separate required jobs.
 
 ## Repository structure
 
