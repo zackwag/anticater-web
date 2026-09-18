@@ -81,7 +81,7 @@ function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch (e) {}
+  } catch {}
   return { bindings: {}, ledMode: null, ledColors: LED_DEFAULT_COLORS, ledPresets: {} };
 }
 
@@ -300,7 +300,6 @@ async function connect() {
 // ---------- key / media picker ----------
 
 let activeControl = null;
-let activeTab = "key";
 
 function openPicker(controlName) {
   activeControl = controlName;
@@ -352,7 +351,6 @@ function renderMediaList() {
 }
 
 function switchTab(tab) {
-  activeTab = tab;
   $$(".modal-tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
   $("#keyGrid").style.display = tab === "key" ? "grid" : "none";
   $("#mediaList").style.display = tab === "media" ? "flex" : "none";
@@ -569,7 +567,7 @@ async function importConfig(file) {
   let imported;
   try {
     imported = JSON.parse(await file.text());
-  } catch (e) {
+  } catch {
     toast("Import failed: not valid JSON", true);
     return;
   }

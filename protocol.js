@@ -1,3 +1,8 @@
+/* exported REPORT_ID, CONTROL, BINDING_TYPE, LAYER, KEYCODES, MEDIACODES,
+   MOUSE_CODES, LED_DEFAULT_COLORS, LED_MODE_COUNT, LED_CUSTOM_COLOR_MODE,
+   MODIFIER_CODES, combineModifierKey, buildBindPackets, buildLedPackets,
+   buildInitPacket, buildLedModeQueryPacket, parseLedModeResponse,
+   LAYER_SETTINGS_RESPONSE_COUNT, buildLayerQueryPacket, parseLayerSettingEntry */
 // Reverse-engineered ANTICATER VK-01 dial protocol.
 // Device: VID 0x514C / PID 0x8850, HID usage page 0xFF00, usage 0x01.
 // Output report ID 0x03. All report bytes below EXCLUDE the report ID
