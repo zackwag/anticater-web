@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/zackwag/anticater-web/compare/v1.7.1...v1.8.0) (2026-09-18)
+
+
+### Features
+
+* add ESLint and a CI lint job ([#16](https://github.com/zackwag/anticater-web/issues/16)) ([ebe39d9](https://github.com/zackwag/anticater-web/commit/ebe39d93acbe7c361bde70f8e3c4885e9b4ab9ca))
+
 ## [1.7.1](https://github.com/zackwag/anticater-web/compare/v1.7.0...v1.7.1) (2026-09-17)
 
 
