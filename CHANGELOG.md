@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2](https://github.com/zackwag/anticater-web/compare/v1.8.1...v1.8.2) (2026-10-29)
+
+
+### Miscellaneous Chores
+
+* bump eslint from 10.12.0 to 10.13.0 ([#28](https://github.com/zackwag/anticater-web/issues/28)) ([c1ecf5e](https://github.com/zackwag/anticater-web/commit/c1ecf5e4b8a489743b63272683121714a71db24b))
+
 ## [1.8.1](https://github.com/zackwag/anticater-web/compare/v1.8.0...v1.8.1) (2026-10-10)
 
 
