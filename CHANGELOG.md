@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.3](https://github.com/zackwag/anticater-web/compare/v1.8.2...v1.8.3) (2026-11-04)
+
+
+### Miscellaneous Chores
+
+* bump eslint from 10.13.0 to 10.14.0 ([#30](https://github.com/zackwag/anticater-web/issues/30)) ([c589a71](https://github.com/zackwag/anticater-web/commit/c589a7186c69aa44b6a268683c8c537713d13aed))
+* bump globals from 17.13.0 to 17.14.0 ([#31](https://github.com/zackwag/anticater-web/issues/31)) ([ab644c4](https://github.com/zackwag/anticater-web/commit/ab644c4b40276d20b2ad86508787f52009530288))
+
 ## [1.8.2](https://github.com/zackwag/anticater-web/compare/v1.8.1...v1.8.2) (2026-10-29)
 
 
