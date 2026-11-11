@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.4](https://github.com/zackwag/anticater-web/compare/v1.8.3...v1.8.4) (2026-11-11)
+
+
+### Miscellaneous Chores
+
+* fix dependabot commit-message prefixes for conventional commits ([#33](https://github.com/zackwag/anticater-web/issues/33)) ([85a116b](https://github.com/zackwag/anticater-web/commit/85a116b7b5652e64a67bbbdaeeec8e570f04817a))
+
 ## [1.8.3](https://github.com/zackwag/anticater-web/compare/v1.8.2...v1.8.3) (2026-11-04)
 
 
